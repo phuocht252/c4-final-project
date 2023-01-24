@@ -9,10 +9,31 @@ import { JwtPayload } from '../../auth/JwtPayload'
 
 const logger = createLogger('auth')
 
-// TODO: Provide a URL that can be used to download a certificate that can be used
-// to verify JWT token signature.
-// To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
-const jwksUrl = '...'
+
+/*
+const cert = `-----BEGIN CERTIFICATE-----
+MIIDHTCCAgWgAwIBAgIJFGISFGjVWCA4MA0GCSqGSIb3DQEBCwUAMCwxKjAoBgNV
+BAMTIWRldi1rb3p6ZHF2ZWozejJlcXNqLnVzLmF1dGgwLmNvbTAeFw0yMjExMTYx
+MTM5MzNaFw0zNjA3MjUxMTM5MzNaMCwxKjAoBgNVBAMTIWRldi1rb3p6ZHF2ZWoz
+ejJlcXNqLnVzLmF1dGgwLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANGlavfiCEiiKWYpK+vj5itX/LcBF4j1bSiD+HJK2eIpoRMFHEwp+MkkdjHK
+mYgCRbJy7URr4Dg0g6NJlav4ou0O3AZLFTYnT9Vadm0da8Yfn6dBIxALVvrucsWg
+oZ1eM/lhzom7AvKkc2ddT8Ljm/OXT6t2vHxPZ1biKbzY/xwstquv3an/yiz2KBMF
+M2br5XBlF26IRDzQmxjuyLNsrcNbLJr/9W+2M+44kdjkYzZGZQMk8Ypna0XNvVnJ
+O1KSsqxL+x/QqKSVBqH2JLxMneE1NwfKi5Z/YQ2Yuack5WOfP5rIHTg6/9sUNTI6
+mKh/BjHSV79PDS9zWSkjsDARq/MCAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAd
+BgNVHQ4EFgQUiOgwrkqd2SFakD2Ohpnl8qcEa/wwDgYDVR0PAQH/BAQDAgKEMA0G
+CSqGSIb3DQEBCwUAA4IBAQCWBoUzGlyV0nItIwpxnUQCF5yVYcd6qNsQ/lSKkJRN
+OFS/OhiwznlG3vsAjg0mXZw3mFYOodqhbTmVhw2C7tR4gy3qqwb8xP2ZhtETt8q+
+IXA2ka8SGa5NHAJnV+3Teia72BsF+RGMScitL8v/hEUhfVAX9Ucj8GoYosNEiRan
+hw9hwt1xlJYsDGYWF4fdtxrebt0n8QCkAYUsj81yk3gtDE/5WgUlRbzXmPF40k6l
+NDH5LQRaWYrQpnnIOeBSvLcsxV4KhXRoxAZQgH8eNo3vjFPZSkEl+q0yH5Amjm1e
+mvKY4fg0CMKU8UKY6QI+NUcUahbmClpxE4+NMaeYSzDr
+-----END CERTIFICATE-----`
+*/ 
+
+//implement if there is time otherwise stick with hardcoded certificate
+const jwksUrl = 'https://dev-vq8kaqph8eplmtc4.us.auth0.com/.well-known/jwks.json'
 
 export const handler = async (
   event: CustomAuthorizerEvent
@@ -57,11 +78,17 @@ export const handler = async (
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
   const token = getToken(authHeader)
   const jwt: Jwt = decode(token, { complete: true }) as Jwt
+  console.log('Request: ' + jwksUrl);
+  const res = await Axios.get(jwksUrl);
+  const keys = res.data.keys.find(key => key.kid === jwt.header.kid);
+  console.log("keys: "+keys);
 
-  // TODO: Implement token verification
-  // You should implement it similarly to how it was implemented for the exercise for the lesson 5
-  // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
-  return undefined
+  if(!keys){
+    throw new Error('Error getting signing keys');
+  }
+
+  const certificate = '-----BEGIN CERTIFICATE-----\n'+keys.x5c[0]+'\n-----END CERTIFICATE-----';
+  return verify(token,certificate,{algorithms: ['RS256']}) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
