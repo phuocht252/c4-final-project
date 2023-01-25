@@ -7,6 +7,9 @@ import { TodoUpdate } from '../models/TodoUpdate';
 var AWSXRay = require('aws-xray-sdk')
 const XAWS = AWSXRay.captureAWS(AWS)
 
+//const logger = createLogger('TodosAccess')
+
+// TODO: Implement the dataLayer logic
 export class TodosAccess{
     constructor(
         private readonly documentClient : DocumentClient = new XAWS.DynamoDB.DocumentClient(),
