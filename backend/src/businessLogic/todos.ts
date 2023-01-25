@@ -19,7 +19,7 @@ export async function createTodo(
 ): Promise<TodoItem> {
     const todoId = uuid.v4()
     const createdAt = new Date().toISOString()
-    const s3Url = attachmentUtils.getDefaultAttachmentUrl()
+    const s3Url = attachmentUtils.getAttachmentUrl(todoId);
     const newItem = {
         userId,
         todoId,

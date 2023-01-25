@@ -157,6 +157,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
   }
 
   renderTodosList() {
+    let userDefaultPicture= 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Stadtbild_M%C3%BCnchen.jpg/2560px-Stadtbild_M%C3%BCnchen.jpg';
     return (
       <Grid padded>
         {this.state.todos.map((todo, pos) => {
@@ -193,7 +194,13 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 </Button>
               </Grid.Column>
               {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
+                <Image src={todo.attachmentUrl} size="small" wrapped 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).onerror = null;
+                    (e.target as HTMLImageElement).src = userDefaultPicture;
+                  }}
+                  
+                />
               )}
               <Grid.Column width={16}>
                 <Divider />
